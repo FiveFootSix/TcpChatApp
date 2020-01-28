@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
-namespace TcpChat
+namespace Shared
 {
     public static class Logger
     {

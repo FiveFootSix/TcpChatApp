@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using TcpChat;
 
 namespace Server
 {
@@ -10,17 +8,8 @@ namespace Server
         {
             try
             {
-                Console.WriteLine("Server is listening on port 9999...");
-
-                var stopwatch = new Stopwatch();
-
-                stopwatch.Start();
-                while (stopwatch.Elapsed.TotalMinutes < 60)
-                {
-                    ServerSocketListener.StartListening();
-                }
-
-                stopwatch.Stop();
+                ServerSocketListener.StartListening();
+                Console.ReadLine();
             }
             catch (Exception e)
             {

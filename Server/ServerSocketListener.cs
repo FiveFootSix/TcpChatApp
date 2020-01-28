@@ -1,44 +1,60 @@
 ﻿using System.Text;
+using System;
+using System.Net.Sockets;
+using System.Net;
 using Shared;
 
 namespace Server
 {
-    internal static class ServerSocketListener
+    internal sealed class ServerSocketListener
     {
-        private static int _bufferSize = 1024;
-        private static string _data;
-        private static string ipAddress = "127.0.0.1";
-        private static int port = 9999;
+        private static byte[] _buffer = new byte[1024];
+        private const int _port = 9999;
+        private static Socket _serverSocket = new Socket(
+            AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
         public static void StartListening()
         {
-            var bytes = new byte[_bufferSize];
+            var ipEndPoint = new IPEndPoint(IPAddress.Loopback, _port);
 
-            var (socket, ipEndPoint) = SocketHandler.CreateSocket(ipAddress, port);
+            _serverSocket.Bind(ipEndPoint);
+            _serverSocket.Listen(10);
 
-            socket.Bind(ipEndPoint);
-            socket.Listen(10);
+            Console.WriteLine("Server is listening on port " + _port);
 
-            while (true)
-            {
-                var handler = socket.Accept();
-                _data = null;
+            _serverSocket.BeginAccept(new AsyncCallback(AcceptCallback), null);
+        }
 
-                while (true)
-                {
-                    var bytesReceived = handler.Receive(bytes);
-                    _data += Encoding.ASCII.GetString(bytes, 0, bytesReceived);
+        private static void AcceptCallback(IAsyncResult asyncResult)
+        {
+            var socket = _serverSocket.EndAccept(asyncResult);
 
-                    if (_data.IndexOf("<EOF>") > -1)
-                    {
-                        break;
-                    }
-                }
+            Console.WriteLine("Client Connected");
 
-                var message = Encoding.ASCII.GetBytes(_data);
+            socket.BeginReceive(_buffer, 0, _buffer.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), socket);
+            _serverSocket.BeginAccept(new AsyncCallback(AcceptCallback), null);
+        }
 
-                handler.Send(message);
-            }
+        private static void ReceiveCallback(IAsyncResult asyncResult)
+        {
+            var socket = (Socket)asyncResult.AsyncState;
+            var received = socket.EndReceive(asyncResult);
+            var data = new byte[received];
+
+            Array.Copy(_buffer, data, received);
+
+            var receivedMessage = Encoding.ASCII.GetString(data);
+            Console.WriteLine(receivedMessage);
+            Logger.WriteToLog("Message received from client: " + receivedMessage);
+
+            socket.BeginSend(data, 0, data.Length, SocketFlags.None, new AsyncCallback(SendCallback), socket);
+            socket.BeginReceive(_buffer, 0, _buffer.Length, SocketFlags.None, new AsyncCallback(ReceiveCallback), socket);
+        }
+
+        private static void SendCallback(IAsyncResult asyncResult)
+        {
+            var socket = (Socket)asyncResult.AsyncState;
+            socket.EndSend(asyncResult);
         }
     }
 }

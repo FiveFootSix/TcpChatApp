@@ -1,5 +1,5 @@
-﻿using System;
-using System.Net.Sockets;
+﻿using Shared;
+using System;
 
 namespace TcpChat
 {
@@ -9,7 +9,8 @@ namespace TcpChat
         {
             try
             {
-                new TcpChatUI().CommunicateWithServer();
+                ClientSocketListener.CommunicateWithServer();
+                Logger.PublishLog();
             }
             catch (Exception e)
             {

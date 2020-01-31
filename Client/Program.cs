@@ -9,7 +9,7 @@ namespace TcpChat
         {
             try
             {
-                ClientSocketListener.CommunicateWithServer();
+                TcpClientUI.CommunicateWithServer();
                 Logger.PublishLog();
             }
             catch (Exception e)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Sockets;
 
 namespace Server
 {
@@ -8,10 +9,10 @@ namespace Server
         {
             try
             {
-                ServerSocketListener.StartListening();
+                TcpServer.StartListening();
                 Console.ReadLine();
             }
-            catch (Exception e)
+            catch (SocketException e)
             {
                 Console.WriteLine(e.Message);
                 Console.ReadLine();
